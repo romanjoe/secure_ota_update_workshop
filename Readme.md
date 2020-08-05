@@ -164,11 +164,16 @@ Specify details regarding Wi-Fi connection below. The most convenient way is to 
 
 In a browser window, open `tools/certificate_configuration/CertificateConfigurator.html`
 
-Provide path to ID-certificate.pem.crt downloaded for a thing.
-
-Provide path to ID-private.pem.key downloaded for a thing.
+Provide path to `ID-certificate.pem.crt` downloaded for a thing.
+Provide path to `ID-private.pem.key` downloaded for a thing.
 
 Choose `Generate` and save `aws_clientcredential_keys.h`, and then save the file in `/verdors/cypress/apps/ota/include/aws_clientcredential_keys.h`. This overwrites the existing file in the directory.
+
+Go to file `amazon-freertos/projects/cypress/CY8CPROTO_062_4343W/mtb/ota/Makefile` and add `MCUBOOT_IMAGE_NUMBER=1` to `DEFINES` so this string looks like:
+
+    DEFINES=CYBSP_WIFI_CAPABLE CY_RTOS_AWARE CY_RETARGET_IO_CONVERT_LF_TO_CRLF CY_USE_LWIP MCUBOOT_IMAGE_NUMBER=1
+
+This configuration is needed in ota example, since it uses `mcuboot` source code as well.
 
 **8. Configuring MCUBoot**
    
