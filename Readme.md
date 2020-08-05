@@ -45,21 +45,16 @@ To update firmware of kitprog execure following commands:
 
 #### Code repositories
 
-Create a folder called `sandbox` in you development directory and clone these two repositories there.
+This guide is distributed in scope of https://github.com/romanjoe/secure_ota_update_workshop repository. There is a folder called `sandbox` in this repo. It contains `mcuboot` and `amazon-freertos` code repositories, as `git submodules`. Correct repositories tags are alredy set by submodules config in this repo:
 
-**1. amazon-freertos**
+`mcuboot`: repo https://github.com/JuulLabs-OSS/mcuboot tag `v1.5.0-cypress`
+`amazon-freertos`: repo https://github.com/cypresssemiconductorco/amazon-freertos.git tag: `201910-MTBAFR1951`
 
-    git clone --recurse-submodules https://github.com/cypresssemiconductorco/amazon-freertos.git --branch <release-tag>
+Be aware, that these two repositoires have its own submodules. To ensure everything is checked out run this command:
 
-`<release-tag>` as for 5-Aug-2020 is `201910-MTBAFR1951`
+    git submodule update --init --recursive
 
-**2. mcuboot**
-
-    git clone --recurse-submodules https://github.com/JuulLabs-OSS/mcuboot --branch <release-tag>
-
-`<release-tag>` as for 5-Aug-2020 is `v1.5.0-cypress`
-
-**ATTENTION:** this guide uses mentioned above tags and claims it's functional. Following updates of `mcuboot` or `amazon-freertos` may break this example due to compatibility issues.
+**ATTENTION:** this demo is only guarantee to work, using code from mentioned tags. Following updates of `mcuboot` or `amazon-freertos` may break this example due to compatibility issues.
 
 #### Amazon Web Services preparation 
 
@@ -71,7 +66,7 @@ Fill all required fields and sing in to created account.
 
 **3. Install `awscli` - command line tool to work with AWS cloud services.**
 
-        python -m pip install awscli
+    python -m pip install awscli
 
 
 **4. Configure the AWS CLI**
