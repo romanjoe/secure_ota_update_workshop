@@ -1,0 +1,6 @@
+[submodule "sandbox/mcuboot"]
+	path = sandbox/mcuboot
+	url = https://github.com/JuulLabs-OSS/mcuboot.git
+[submodule "sandbox/amazon-freertos"]
+	path = sandbox/amazon-freertos
+	url = https://github.com/cypresssemiconductorco/amazon-freertos.git
