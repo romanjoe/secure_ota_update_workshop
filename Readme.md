@@ -1,12 +1,24 @@
-### Description
+## Description
 
-TBD
+This repository is created to support workshop about over the air (OTA) updates for IoT devices. It includes code repositories, slides for theortical part, folder structure to support participants workplace organization and this guide.
 
-### Workspace preparation
+Demo components:
+* Amazon FreeRTOS
+* MCUBoot secure bootloader
+* Amazon IoT services
+* PSoC62 + WiFi-BLE enabled development kit
+
+## Workspace preparation
 
 #### Software
 
+**Git** - source code version control system.
+
+**Serial terminal emulator** - `TeraTerm`, `PuTTY` - on Windows, `SerialTools` on Mac, `screen` on Linux.
+
 **awscli** - command line tool to interact with Amazon Web Services. It is a Python module. Installation of this tool would be covered in next paragraphs.
+
+**openssl** - tool to generate cryptographic keys, certificates, etc. On Windows it is included with `Git` source control system, on Linux probably installed already, on Mac - using `brew` packet manager - `brew install openssl`.
 
 **Cypress Programmer** (optional) is a GUI programmer tool for flashing Cypress chips. Link to download - https://www.cypress.com/products/psoc-programming-solutions
 
@@ -25,15 +37,11 @@ There are couple ways of using `ModusToolbox IDE` for this demo:
 1. Using ModusToolbox IDE - eclipse based full featured development environment
 2. Use ModusToolbox IDE tools from command line
 
-`amazon-freertos` also support **Cmake** build system. More info about using this build system can be found in Readme.md
-
-In case of using **Cmake** - this build system should also be installed.
-
-**Following text will rely on using ModusToolbox IDE tools from command line method.**
+**Following text will rely on using ModusToolbox IDE tools from command line.**
 
 #### Hardware
 
-Cypress PSoC 6 Wi-Fi BT Prototyping Kit [**CY8CPROTO-062-4343W**](https://www.cypress.com/documentation/development-kitsboards/psoc-6-wi-fi-bt-prototyping-kit-cy8cproto-062-4343w) will be used for this demo. 
+This demo is based on Cypress PSoC 6 Wi-Fi BT Prototyping Kit [**CY8CPROTO-062-4343W**](https://www.cypress.com/documentation/development-kitsboards/psoc-6-wi-fi-bt-prototyping-kit-cy8cproto-062-4343w) . 
 
 *NOTE:* This kit ship with KitProg2 installed. ModusToolbox software requires KitProg3. Before using this demo, make sure that the kit is upgraded to KitProg3. The tool and instructions are available in the Firmware Loader [GitHub repository](https://github.com/cypresssemiconductorco/Firmware-loader/releases/tag/3.0.0). If you do not upgrade, you will see an error like “unable to find CMSIS-DAP device” or “KitProg firmware is out of date”.
 
@@ -48,28 +56,34 @@ To update firmware of kitprog execure following commands:
 This guide is distributed in scope of https://github.com/romanjoe/secure_ota_update_workshop repository. There is a folder called `sandbox` in this repo. It contains `mcuboot` and `amazon-freertos` code repositories, as `git submodules`. Correct repositories tags are alredy set by submodules config in this repo:
 
 `mcuboot`: repo https://github.com/JuulLabs-OSS/mcuboot tag `v1.5.0-cypress`
+
 `amazon-freertos`: repo https://github.com/cypresssemiconductorco/amazon-freertos.git tag: `201910-MTBAFR1951`
 
-Be aware, that these two repositoires have its own submodules. To ensure everything is checked out run this command:
+Be aware, that these two repositoires have its own submodules. To ensure everything is checked out run this command from root of this repository:
 
     git submodule update --init --recursive
 
 **ATTENTION:** this demo is only guarantee to work, using code from mentioned tags. Following updates of `mcuboot` or `amazon-freertos` may break this example due to compatibility issues.
 
-#### Amazon Web Services preparation 
+## Amazon Web Services preparation 
 
 **1. Create and configure AWS User Profile**
 
-Create Amazon Web Services account. You will be asked to ented your bank card number, but it will now charge you.
+Create Amazon Web Services account. You will be asked to enter your bank card number - this is required, but no fee would be changed for usage.
 
 Fill all required fields and sing in to created account.
 
-**3. Install `awscli` - command line tool to work with AWS cloud services.**
+**3. Install `awscli` - command line tool to work with AWS cloud services**
 
+It is best to use python virtual environment for this type of demos, as you may not need these tools after demo.
+
+    python -m pip install virtualenv
+    virtualenv --python=python3 venv3
+    souce ./venv3/bin/acticate
     python -m pip install awscli
 
 
-**4. Configure the AWS CLI**
+**4. Configure the `awscli`**
 
 [Doc: cli-configure-quickstart](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)
 
@@ -88,13 +102,12 @@ Fill all required fields and sing in to created account.
         Default region name [None]: us-west-2
         Default output format [None]: json
 
-    https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
-3. Check profile created successfully
+4. Check profile created successfully
 
         aws configure list-profiles
 
-4. Check detail about profile
+5. Check detail about profile
 
         aws configure list
 
@@ -106,7 +119,7 @@ Environment variable to set default profile `export AWS_PROFILE=ucu_ws`
 
 [Doc: id_users_create](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html)
 
-Create User with name `rnok` in profile `ucu_ws`
+Create User with sampe name using profile `ucu_ws`
 
     aws iam create-user --user-name rnok --profile=ucu_ws
 
@@ -122,7 +135,7 @@ Attach policies to grant access to amazon freertos related services.
 
     aws iam attach-user-policy --policy-arn arn:aws:iam::aws:policy/AWSIoTFullAccess --user-name rnok --profile ucu_ws
 
-**6. Registering your MCU board with AWS IoT**
+**6. Registering your MCU board with AWS IoT Core**
 
 [Doc: get-started-freertos-thing](https://docs.aws.amazon.com/freertos/latest/userguide/get-started-freertos-thing.html)
 
@@ -135,7 +148,9 @@ Follow steps described in a link above. Key steps are:
 5. Attach a policy created in step 1
 
 
-**7. Configuring the FreeRTOS demos**
+## Configuring demo code
+
+### AmazonFreeRTOS
 
 [Doc: freertos-configure](https://docs.aws.amazon.com/freertos/latest/userguide/freertos-configure.html)
 
@@ -167,7 +182,7 @@ In a browser window, open `tools/certificate_configuration/CertificateConfigurat
 Provide path to `ID-certificate.pem.crt` downloaded for a thing.
 Provide path to `ID-private.pem.key` downloaded for a thing.
 
-Choose `Generate` and save `aws_clientcredential_keys.h`, and then save the file in `/verdors/cypress/apps/ota/include/aws_clientcredential_keys.h`. This overwrites the existing file in the directory.
+Choose `Generate` and save `aws_clientcredential_keys.h` file to `/verdors/cypress/apps/ota/include/aws_clientcredential_keys.h`. This overwrites the existing file in the directory.
 
 Go to file `amazon-freertos/projects/cypress/CY8CPROTO_062_4343W/mtb/ota/Makefile` and add `MCUBOOT_IMAGE_NUMBER=1` to `DEFINES` so this string looks like:
 
@@ -175,7 +190,7 @@ Go to file `amazon-freertos/projects/cypress/CY8CPROTO_062_4343W/mtb/ota/Makefil
 
 This configuration is needed in ota example, since it uses `mcuboot` source code as well.
 
-**8. Configuring MCUBoot**
+### Configuring MCUBoot
    
 MCUBoot and the OTA application must have the same understanding of the memory layout. Override the default memory layout by adding the following defines in the file `mcuboot/boot/cypress/MCUBootApp/MCUBootApp.mk`.
 
@@ -185,10 +200,9 @@ MCUBoot and the OTA application must have the same understanding of the memory l
     DEFINES_APP +=-DCY_BOOT_PRIMARY_1_SIZE=0x0EE000
     DEFINES_APP +=-DCY_BOOT_SECONDARY_1_SIZE=0x0EE000
 
-If you use **Cmake**:
-If you modify values above, ensure that the corresponding values in `CMakelists.txt` at `amazon_freertos/vendors/cypress/boards/CY8CPROTO_062_4343W` are also changed to new values.
 
-**9. RAM adresses aligning**
+
+### RAM adresses aligning
 
 Since `MCUBootApp` is a bootloader running on CM0p core of PSoC6 and `amazon-freertos ota example` is a user application running on CM4 core, it is also required to change the default `RAM` memory layouts in linker scripts to aling common address space usage.
 
@@ -202,7 +216,7 @@ Change values in `/amazon-freertos/vendors/cypress/boards/CY8CPROTO_062_4343W/aw
 
 This way no crossing of memory areas present.
 
-**10. Creating a New Key-Pair**
+### Creating a New Key-Pair
 
 1. Open a command prompt. Change the directory to `mcuboot/boot/cypress/keys`. Replace `<filename>` with a name of your choice. 
     
@@ -210,7 +224,7 @@ This way no crossing of memory areas present.
         
         openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -pkeyopt ec_param_enc:named_curve -outform PEM -out <filename>.pem
 
-3. Create a new file *cert_config.txt* in the same directory with the following contents. Modify `<user_name>` and `<domain>` to match your credentials.
+3. Create a new file `cert_config.txt` in the same directory with the following contents. Modify `<user_name>` and `<domain>` to match your email. Random can be used.
 
         [ req ]
         prompt             = no
@@ -246,7 +260,7 @@ Certificate should be formatted like this:
 
 6. Generate a public key using the following command (suppose you are in `mcuboot/boot/cypress/keys`):
 
-        python ../../../scripts/imgtool.py getpub -k <filename>.pem> <filename>.pub
+        python ../../../scripts/imgtool.py getpub -k <filename>.pem> > <filename>.pub
 
 7. Open file `mcuboot/boot/cypress/MCUBootApp/keys.c` and replace
 
@@ -283,7 +297,7 @@ This command will use `psoc6make` build system library from ModusToolbox.
 
 ### Application output
 
-If everything configured correctly following output displayed in Serial Terminal.
+If everything is configured correctly following output displayed in Serial Terminal.
 
     [INF] MCUBoot Bootloader Started
 
@@ -378,9 +392,11 @@ Rebuild example, but do not program to the board.
 4. Creating a code-signing certificate for custom hardware.
 5. Grant access to code signing for AWS IoT using this [guide](https://docs.aws.amazon.com/freertos/latest/userguide/code-sign-policy.html)
  
-In paragraph **Creating keys** private key and the code-signing certificate have been created. Now it is needed to import this certificate and private key AWS Certificate Manager. Change directory to `mcuboot/boot/cypress/keys`. Use this command to import. 
+In paragraph **Creating keys** private key and the code-signing certificate have been created. Now it is needed to import this certificate and private key to AWS Certificate Manager. Change directory to `mcuboot/boot/cypress/keys`. Use this command to import. 
 
     aws acm import-certificate --certificate fileb://<filename>.crt --private-key fileb://<filename>.pem --profile <profile_name > > ../../../../amazon-freertos/vendors/cypress/apps/ota/scripts/certarn.json
+
+*NOTE:* this prefixes  `fileb://` should remain in command
 
 This command will write an ARN for your certificate to `certarn.json`. You need this ARN when you create an OTA update job.
 
@@ -407,6 +423,71 @@ Example output of script execution. Ensure there are no error reported.
     Created new signing profile: {'ResponseMetadata': {'RequestId': 'de788c02-0619-45e9-9dee-55dccdaee367', 'HTTPStatusCode': 200, 'HTTPHeaders': {'date': 'Wed, 05 Aug 2020 21:44:50 GMT', 'content-type': 'application/json', 'content-length': '341', 'connection': 'keep-alive', 'x-amzn-requestid': 'de788c02-0619-45e9-9dee-55dccdaee367', 'x-amz-apigw-id': 'Q0M82FQOCYcF4WA=', 'cache-control': 'no-cache; no-store, must-revalidate, private', 'expires': '0', 'x-amzn-trace-id': 'Root=1-5f2b2852-699bcb34e54262adc4caaa12', 'pragma': 'no-cache'}, 'RetryAttempts': 0}, 'arn': 'arn:aws:signer:us-east-2:566642077127:/signing-profiles/default'}
     Files for update: [{'fileName': 'ota_2-2-2.bin', 'fileVersion': '1', 'fileLocation': {'s3Location': {'bucket': 'ucu-ws-ota-updates-bucket', 'key': 'ota_2-2-2.bin', 'version': 'null'}}, 'codeSigning': {'startSigningJobParameter': {'signingProfileName': 'default', 'destination': {'s3Destination': {'bucket': 'ucu-ws-ota-updates-bucket'}}}}}]
     OTA Update Status: {'ResponseMetadata': {'RequestId': '5bdc94c4-2046-4728-afea-0b985d2cae00', 'HTTPStatusCode': 200, 'HTTPHeaders': {'date': 'Wed, 05 Aug 2020 21:44:52 GMT', 'content-type': 'application/json', 'content-length': '153', 'connection': 'keep-alive', 'x-amzn-requestid': '5bdc94c4-2046-4728-afea-0b985d2cae00', 'access-control-allow-origin': '*', 'x-amz-apigw-id': 'Q0M9KFYliYcF8rQ=', 'x-amzn-trace-id': 'Root=1-5f2b2854-93b2197fc2142aff65d3a4dc'}, 'RetryAttempts': 0}, 'otaUpdateId': 'update-13195-2-2-2', 'otaUpdateArn': 'arn:aws:iot:us-east-2:566642077127:otaupdate/update-13195-2-2-2', 'otaUpdateStatus': 'CREATE_PENDING'}
+
+### OTA Update result
+
+If all above steps are done correcly an OTA update job will be started on device. Example output from Serial Terminal after new firmware downloaded.
+
+    1774 85019 [OTA Task] [prvIngestDataBlock] Received file block 768, size 1024
+    1775 85021 [OTA Task] [prvIngestDataBlock] Remaining: 1
+    1776 85156 [OTA Task] [prvIngestDataBlock] Received file block 805, size 1024
+    1777 85159 [OTA Task] [prvIngestDataBlock] Received final expected block of file.
+    1778 85159 [OTA Task] [prvStopRequestTimer] Stopping file request timer.
+    1779 85159 [OTA Task] prvPAL_CloseFile()
+    1780 85776 [iot_threa] State: Active  Received: 810   Queued: 810   Processed: 809   Dropped: 0
+    1781 86518 [OTA Task] prvPAL_CloseFile() prvPAL_CheckFileSignature() GOOD
+    1782 86521 [OTA Task] [prvIngestDataBlock] File receive complete and signature is valid.
+    1783 86521 [OTA Task] [prvUpdateJobStatus] Msg: {“status”:”IN_PROGRESS”,”statusDetails”:{“self_test”:”ready”,”updatedBy”:”0x1000000”}}
+    1784 86523 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810) MQTT PUBLISH operation queued.
+    1785 86523 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810, PUBLISH operation 0x8019928) Waiting for operation completion.
+    1786 86738 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810, PUBLISH operation 0x8019928) Wait complete with result SUCCESS.
+    1787 86738 [OTA Task] [prvUpdateJobStatus] ‘IN_PROGRESS’ to $aws/things/psoc62_4343w/jobs/AFR_OTA-update-13195-2-2-2/update
+    1788 86739 [OTA Task] [prvOTA_Close] Context->0x08010588
+    1789 86740 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810) UNSUBSCRIBE operation scheduled.
+    1790 86740 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810, UNSUBSCRIBE operation 0x8019928) Waiting for operation completion.
+    1791 86776 [iot_threa] State: Active  Received: 810   Queued: 810   Processed: 809   Dropped: 0
+    1792 86968 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810, UNSUBSCRIBE operation 0x8019928) Wait complete with result SUCCESS.
+    1793 86968 [OTA Task] [prvUnSubscribeFromDataStream] OK: $aws/things/psoc62_4343w/streams/AFR_OTA-f15f422c-9650-4d6b-b92e-527d63ee3783/data/cbor
+
+    1794 86969 [OTA Task] Received eOTA_JobEvent_Activate callback from OTA Agent.
+    1795 86969 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810) Disconnecting connection.
+    1796 86969 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810, DISCONNECT operation 0x80195a0) Waiting for operation completion.
+    1797 86970 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810, DISCONNECT operation 0x80195a0) Wait complete with result SUCCESS.
+    1798 86970 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810) Connection disconnected.
+    1799 86970 [OTA Task] [INFO ][MQTT][lu] (MQTT connection 0x8019810) Network connection closed.
+    1800 87272 [OTA Task] prvPAL_ActivateNewImage() 
+    1801 87776 [iot_threa] State: Active  Received: 810   Queued: 810   Processed: 809   Dropped: 0
+    prvPAL_ResetDevice()   RESETTING NOW !!!!
+    [INF] MCUBoot Bootloader Started
+
+    [INF] Swap type: test
+
+    [INF] Image upgrade secondary slot -> primary slot
+
+    [INF] Erasing the primary slot
+
+    [INF] Copying the secondary slot to the primary slot: 0xzx bytes
+
+    [INF] User Application validated successfully
+
+    [INF] Starting User Application on CM4 (wait)…
+
+
+    Cypress FreeRTOS OTA Demo - App Version: 2.2.2
+    WLAN MAC Address : 00:9D:6B:64:05:F9
+    WLAN Firmware    : wl0: Sep  5 2019 23:24:33 version 7.45.98.92 (r722362 CY) FWID 01-f7128517
+    WLAN CLM         : API: 12.2 Data: 9.10.39 Compiler: 1.29.4 ClmImport: 1.36.3 Creation: 2019-09-05 23:10:00 
+    WHD VERSION      : v1.70.0 : v1.70.0 : GCC 7.2 : 2019-12-02 04:14:53 -0600
+    1 3894 [Tmr Svc] Wi-Fi Connected to AP. Creating tasks which use network…
+    2 3894 [Tmr Svc] IP Address acquired 172.20.10.2
+    3 5704 [Tmr Svc] Write certificate…
+    4 6244 [iot_threa] [INFO ][DEMO][lu] ————STARTING DEMO————
+
+After sucesssful download of new firmware in `UPGRADE` slot OTA Task initiate new image signanure verification and if it is okay - initiates `System Reset`, so that `MCUBootApp` Bootloader can start update procedure. If everything done well - new updated firmware starts execution.
+
+New application version displayed: `Cypress FreeRTOS OTA Demo - App Version: 2.2.2`.
+
+Update job at ASW IoT Console marked as `Completed` https://us-east-2.console.aws.amazon.com/iot/home?region=us-east-2#/jobhub
 
 ## Design and Implementation
 ### Amazon FreeRTOS OTA Overview
