@@ -437,18 +437,18 @@ The data flow for Amazon FreeRTOS OTA involves the following three entities:
 
 3. **Target that receives the OTA update**: For the target to receive OTA updates, the OTA agent must be running in the target. The OTA Agent enables you to manage the notification and download & verify firmware updates for Amazon FreeRTOS devices. By using the OTA Agent library, you can logically separate firmware updates and the application running on your devices. The OTA Agent library allows you to define application-specific logic for testing, committing, or rolling back a firmware update.
 
-[Figure 4](#figure-4-amazon-freertos-ota-data-flow) illustrates the flow of information in the Amazon FreeRTOS OTA.
+[Figure 1](#figure-4-amazon-freertos-ota-data-flow) illustrates the flow of information in the Amazon FreeRTOS OTA.
 
-##### Figure 4. Amazon FreeRTOS OTA Data Flow
-![Figure 4](./images/Figure4.png)
+##### Figure 1. Amazon FreeRTOS OTA Data Flow
+![Figure 1](./images/Figure4.png)
 
 
 ### Memory Layout in PSoC 6 with 2 MB Flash
 
-The device has an internal flash of size 2 MB. The memory is partitioned into four regions as shown in [Figure 5](#figure-5-flash-memory-layout).
+The device has an internal flash of size 2 MB. The memory is partitioned into four regions as shown in [Figure 2](#figure-5-flash-memory-layout).
 
-##### Figure 5. Flash Memory Layout
-![Figure 5](./images/Figure5.jpg)
+##### Figure 2. Flash Memory Layout
+![Figure 2](./images/Figure5.jpg)
 
 1. Bootloader region of size 72 KB.
 
@@ -487,10 +487,10 @@ The python script *start_ota.py* uses the following parameters:
 
 - **devicetype**: This is an optional parameter. The default value is `thing`. If you are deploying the updated image to a group, provide this parameter with the value set as `group`.
 
-[Figure 6](#figure-6-flow-chart-of-start_ota.py) shows the operations performed by the Python script.
+[Figure 3](#figure-6-flow-chart-of-start_ota.py) shows the operations performed by the Python script.
 
-##### Figure 6. Flowchart of *start_ota.py*
-![Figure 6](./images/Figure6.jpg)
+##### Figure 3. Flowchart of *start_ota.py*
+![Figure 3](./images/Figure3.jpg)
 
 To summarize, the script will create the S3 Bucket and Role if they have not been created already. Creating a role requires the IAMFullAccess policy to be attached to your IAM account. Contact your administrator to attach the policy to your account. If your account administrator doesn't provide you with IAMFullAccess, ask your administrator to create a role for you using the *start_ota.py* script. Before starting the OTA Job, the script picks the binary image, creates a copy, renames it to include the version information, and uploads it to the S3 Bucket. Then, it creates a signing profile if it isn't already present, and creates an OTA Job with the latest version of the file in the S3 bucket. 
 
